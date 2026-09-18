@@ -30,7 +30,7 @@ This is a proof of concept implementation for the project brief, Section 6. It d
 
 `HYPERLEDGER_FABRIC_MAPPING.md` is a design level mapping of `ledger.py`'s interface onto a Hyperledger Fabric chaincode: state model, function table, an illustrative Go sketch, and an honest list of what a real Fabric deployment adds that this PoC does not claim.
 
-`FIGURE_CAPTIONS.md` has ready to paste captions for Figures A through F, a replacement paragraph for the tamper detection section, and Limitations wording for the bugs that were found and fixed. `BSS2026_Provenance_Paper.docx` was not found on this machine, so none of this text has actually been inserted into the paper yet.
+`FIGURE_CAPTIONS.md` has ready to paste captions for Figures A through F, a replacement paragraph for the tamper detection section, and Limitations wording for the bugs that were found and fixed.
 
 `evaluation_summary.json` and `real_episode_evaluation.json` are machine readable output from the demo run, on synthetic data and on real Sentinel-1/2 data respectively.
 
