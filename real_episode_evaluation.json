@@ -1,0 +1,9 @@
+{
+  "episode_id": "almaty-2023_2024-episode-001",
+  "n_stages": 9,
+  "merkle_root": "63cca0c391b9050d60b5cafe95a08dc79dd7848f21602ec3b12cbeb7b8c3388d",
+  "attack_type2_detected": true,
+  "attack_type3_detected": true,
+  "naive_catches_type2": false,
+  "naive_catches_type3": true
+}

@@ -1,0 +1,16 @@
+{
+  "pipeline_compute_ms": 10.888,
+  "anchoring_overhead_ms": 2.619,
+  "anchoring_overhead_pct": 24.057,
+  "leaves_per_episode": 9,
+  "off_chain_leaf_storage_bytes": 288,
+  "on_chain_storage_bytes_per_episode": 32,
+  "attack_type2_param_level_detected": true,
+  "attack_type2_localized_stage": "change_mask",
+  "attack_type3_output_level_detected": true,
+  "attack_type3_localized_stage": "change_mask",
+  "naive_baseline_catches_type3": true,
+  "naive_baseline_catches_type2_in_this_run": false,
+  "naive_baseline_can_localize": false,
+  "ledger_chain_intact": true
+}

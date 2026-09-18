@@ -1,0 +1,183 @@
+{
+  "episode_id": "almaty-2023_2024-episode-001",
+  "params": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "lambda": 0.2,
+    "tau": 0.4,
+    "scale_val": 100
+  },
+  "records": [
+    {
+      "label": "data_acquisition_s2",
+      "input_ref": {
+        "collection": "COPERNICUS/S2_SR_HARMONIZED",
+        "periods": [
+          "2023-06-01/2023-08-31",
+          "2024-06-01/2024-08-31"
+        ]
+      },
+      "params": {
+        "cloud_pct_lt": 30,
+        "cloud_mask": "QA60_bits_10_11"
+      },
+      "output": {
+        "scene_ids_hash": "3e4892f4ab8ef3b486a04fb061307930893948845fbaa66599e1f3d54ac8c960",
+        "n_scenes": 172
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "data_acquisition_s1",
+      "input_ref": {
+        "collection": "COPERNICUS/S1_GRD",
+        "periods": [
+          "2023-06-01/2023-08-31",
+          "2024-06-01/2024-08-31"
+        ]
+      },
+      "params": {
+        "instrument_mode": "IW",
+        "join_max_diff_days": 15
+      },
+      "output": {
+        "scene_ids_hash": "0408f20705638028d3cfe22ed80a4c864581ccdee16ccd8edc991f0a4a236873",
+        "n_scenes": 145
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "pearson_corr_period1",
+      "input_ref": {
+        "period": "2023-06-01/2023-08-31"
+      },
+      "params": {
+        "reducer": "pearsonsCorrelation"
+      },
+      "output": {
+        "mean": -0.007852,
+        "n_samples": 200,
+        "array_hash": "4d8eaf98ffe9ffa14d3ff28a0da99c42fa06dee90087dbe444a9561d5ea2c47c"
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "pearson_corr_period2",
+      "input_ref": {
+        "period": "2024-06-01/2024-08-31"
+      },
+      "params": {
+        "reducer": "pearsonsCorrelation"
+      },
+      "output": {
+        "mean": -0.035951,
+        "n_samples": 200,
+        "array_hash": "44f963db789596009f17b9d943cf55d428a7321e2365ced9987e46e3285b616d"
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "delta_corr",
+      "input_ref": {
+        "depends_on": [
+          "pearson_corr_period1",
+          "pearson_corr_period2"
+        ]
+      },
+      "params": {},
+      "output": {
+        "mean": -0.028099,
+        "n_samples": 200,
+        "array_hash": "797bb5a65487ac783d738039373e554dcd34434692eaae7fdbdb00859db1d2b7"
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "r_t",
+      "input_ref": {
+        "period": "2023-01-01/2024-12-31"
+      },
+      "params": {
+        "reducer": "pearsonsCorrelation"
+      },
+      "output": {
+        "mean": 0.011203,
+        "n_samples": 200,
+        "array_hash": "5fa73a4f37d8d9880128a76cfa40a827adb7f828c319e5d9cdc37d9f37764577"
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "moran_index",
+      "input_ref": {
+        "depends_on": [
+          "delta_corr"
+        ]
+      },
+      "params": {
+        "kernel": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "output": {
+        "mean": -0.000114,
+        "n_samples": 200,
+        "array_hash": "f92c08d3bd5c7e21ede2d8c1e4e0c0fa58ba3fd3162c4e1803e3e20199bc8662"
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "risk_index",
+      "input_ref": {
+        "depends_on": [
+          "delta_corr",
+          "moran_index",
+          "r_t"
+        ]
+      },
+      "params": {
+        "alpha": 0.5,
+        "beta": 0.3,
+        "lambda": 0.2
+      },
+      "output": {
+        "mean": 0.238717,
+        "n_samples": 200,
+        "array_hash": "344cea85f248527d18757abb9cf18680f18b566c3904831f857b15687f058e90"
+      },
+      "timestamp": 1789581087.4398646
+    },
+    {
+      "label": "change_mask",
+      "input_ref": {
+        "depends_on": [
+          "risk_index"
+        ]
+      },
+      "params": {
+        "tau": 0.4
+      },
+      "output": {
+        "mean": 0.138727,
+        "n_samples": 200,
+        "array_hash": "a912361ad6bad5550951b77501f579546adcb6cf82db5989e2ebfb5d434903cb",
+        "changed_pixels_est": 7579
+      },
+      "timestamp": 1789581087.4398646
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": "genuine_unmodified",
+    "n_trials": 40,
+    "false_positive_count": 0,
+    "false_positive_rate": 0.0
+  },
+  {
+    "scenario": "legitimate_new_param_recomputed",
+    "n_trials": 40,
+    "false_positive_count": 0,
+    "false_positive_rate": 0.0
+  },
+  {
+    "scenario": "legitimate_old_episode_naive_check",
+    "n_trials": 40,
+    "false_positive_count": 40,
+    "false_positive_rate": 1.0
+  },
+  {
+    "scenario": "legitimate_old_episode_scoped_check",
+    "n_trials": 40,
+    "false_positive_count": 0,
+    "false_positive_rate": 0.0
+  }
+]

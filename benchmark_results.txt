@@ -1,0 +1,30 @@
+==============================================================================
+1. OVERHEAD ACROSS SCALES (mean +/- stdev over 500 trials)
+==============================================================================
+   scale   grid    pipeline_ms    anchor_ms   overhead_%  proof_gen_us  proof_verify_us
+    100m     24       1.75±0.7      0.06±0.0        3.20%          2.10             3.13
+     50m     34       2.70±0.0      0.04±0.0        1.64%          1.63             2.42
+     30m     48       5.30±0.1      0.05±0.0        0.87%          1.78             2.45
+     20m     63       9.24±0.2      0.05±0.0        0.54%          2.11             2.55
+     10m     96      21.60±1.7      0.07±0.0        0.31%          3.68             2.90
+
+(As grid resolution increases, pipeline compute grows faster than hashing/Merkle/signing -- which touches only per-stage SUMMARY hashes, not every pixel individually -- so relative overhead should shrink at finer scales. Cite this trend, not just the raw percentages, since absolute ms values here are sandbox-dependent, not GEE-server-dependent.)
+
+(Proof generation/verification -- what an auditor actually pays at query time -- are reported in microseconds and stay flat across scale, since a proof path is always log2(9) ~ 4 hash operations regardless of AOI size or resolution: verification cost does not grow with the data.)
+
+==============================================================================
+2. STORAGE COST PROJECTION over a monitoring period
+==============================================================================
+    monthly monitoring, 1y:   12 episodes -> on-chain    1.12 KB | off-chain leaf store    3.38 KB
+    monthly monitoring, 2y:   24 episodes -> on-chain    2.25 KB | off-chain leaf store    6.75 KB
+    monthly monitoring, 5y:   60 episodes -> on-chain    5.62 KB | off-chain leaf store   16.88 KB
+  bi-weekly monitoring, 1y:   26 episodes -> on-chain    2.44 KB | off-chain leaf store    7.31 KB
+  bi-weekly monitoring, 2y:   52 episodes -> on-chain    4.88 KB | off-chain leaf store   14.62 KB
+  bi-weekly monitoring, 5y:  130 episodes -> on-chain   12.19 KB | off-chain leaf store   36.56 KB
+     weekly monitoring, 1y:   52 episodes -> on-chain    4.88 KB | off-chain leaf store   14.62 KB
+     weekly monitoring, 2y:  104 episodes -> on-chain    9.75 KB | off-chain leaf store   29.25 KB
+     weekly monitoring, 5y:  260 episodes -> on-chain   24.38 KB | off-chain leaf store   73.12 KB
+
+Per-episode fixed leaf count: 9 stages (independent of AOI size or scale -- the pipeline structure is fixed, only per-pixel array sizes inside each stage's array_hash change). This is the key scalability argument: on-chain storage growth is O(episodes), not O(pixels) or O(AOI area), because raw rasters never go on-chain -- only one root + one signature per episode.
+
+Written: benchmark_results.json

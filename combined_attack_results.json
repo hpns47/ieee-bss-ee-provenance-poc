@@ -1,0 +1,8 @@
+{
+  "n_trials": 40,
+  "detected_count": 40,
+  "both_stages_localized_correct_count_new_method": 40,
+  "old_single_stage_method_would_have_missed_one_count": 40,
+  "detection_rate": 1.0,
+  "both_stage_localization_accuracy_new_method": 1.0
+}

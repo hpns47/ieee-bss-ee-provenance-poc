@@ -1,0 +1,119 @@
+{
+  "overhead_by_scale": {
+    "100m": {
+      "pipe_mean": 1.7504215899425617,
+      "pipe_sd": 0.6863203528474293,
+      "anchor_mean": 0.05599826203979319,
+      "anchor_sd": 0.021485065229802057,
+      "overhead_pct": 3.1991299902574166,
+      "n_leaves": 9,
+      "proof_gen_us_mean": 2.1024859343015123,
+      "proof_verify_us_mean": 3.1294520558731165
+    },
+    "50m": {
+      "pipe_mean": 2.7041992260528787,
+      "pipe_sd": 0.025329384461556734,
+      "anchor_mean": 0.04426551397409639,
+      "anchor_sd": 0.0019497926355123657,
+      "overhead_pct": 1.6369176334210966,
+      "n_leaves": 9,
+      "proof_gen_us_mean": 1.631274019018747,
+      "proof_verify_us_mean": 2.42388597689569
+    },
+    "30m": {
+      "pipe_mean": 5.295466483963537,
+      "pipe_sd": 0.054076077283239,
+      "anchor_mean": 0.04616204400736024,
+      "anchor_sd": 0.002959285059391488,
+      "overhead_pct": 0.8717276211105199,
+      "n_leaves": 9,
+      "proof_gen_us_mean": 1.7816179970395751,
+      "proof_verify_us_mean": 2.454323956044391
+    },
+    "20m": {
+      "pipe_mean": 9.240210290037794,
+      "pipe_sd": 0.178417814192372,
+      "anchor_mean": 0.04963488402790972,
+      "anchor_sd": 0.0095158206287767,
+      "overhead_pct": 0.5371618444812115,
+      "n_leaves": 9,
+      "proof_gen_us_mean": 2.109309996740194,
+      "proof_verify_us_mean": 2.547540017985739
+    },
+    "10m": {
+      "pipe_mean": 21.602168626002822,
+      "pipe_sd": 1.7215707131014868,
+      "anchor_mean": 0.06641154195312993,
+      "anchor_sd": 0.017329600852128157,
+      "overhead_pct": 0.30742997660517035,
+      "n_leaves": 9,
+      "proof_gen_us_mean": 3.6807280557695776,
+      "proof_verify_us_mean": 2.8998640191275626
+    }
+  },
+  "storage_projection": [
+    {
+      "cadence": "monthly monitoring",
+      "years": 1,
+      "n_episodes": 12,
+      "on_chain_bytes": 1152,
+      "off_chain_bytes": 3456
+    },
+    {
+      "cadence": "monthly monitoring",
+      "years": 2,
+      "n_episodes": 24,
+      "on_chain_bytes": 2304,
+      "off_chain_bytes": 6912
+    },
+    {
+      "cadence": "monthly monitoring",
+      "years": 5,
+      "n_episodes": 60,
+      "on_chain_bytes": 5760,
+      "off_chain_bytes": 17280
+    },
+    {
+      "cadence": "bi-weekly monitoring",
+      "years": 1,
+      "n_episodes": 26,
+      "on_chain_bytes": 2496,
+      "off_chain_bytes": 7488
+    },
+    {
+      "cadence": "bi-weekly monitoring",
+      "years": 2,
+      "n_episodes": 52,
+      "on_chain_bytes": 4992,
+      "off_chain_bytes": 14976
+    },
+    {
+      "cadence": "bi-weekly monitoring",
+      "years": 5,
+      "n_episodes": 130,
+      "on_chain_bytes": 12480,
+      "off_chain_bytes": 37440
+    },
+    {
+      "cadence": "weekly monitoring",
+      "years": 1,
+      "n_episodes": 52,
+      "on_chain_bytes": 4992,
+      "off_chain_bytes": 14976
+    },
+    {
+      "cadence": "weekly monitoring",
+      "years": 2,
+      "n_episodes": 104,
+      "on_chain_bytes": 9984,
+      "off_chain_bytes": 29952
+    },
+    {
+      "cadence": "weekly monitoring",
+      "years": 5,
+      "n_episodes": 260,
+      "on_chain_bytes": 24960,
+      "off_chain_bytes": 74880
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "episode_id": "test-fake-gee-episode",
+  "params": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "lambda": 0.2,
+    "tau": 0.4,
+    "scale_val": 100
+  },
+  "records": [
+    {
+      "label": "data_acquisition_s2",
+      "input_ref": {
+        "collection": "COPERNICUS/S2_SR_HARMONIZED",
+        "periods": [
+          "2023-06-01/2023-08-31",
+          "2024-06-01/2024-08-31"
+        ]
+      },
+      "params": {
+        "cloud_pct_lt": 30,
+        "cloud_mask": "QA60_bits_10_11"
+      },
+      "output": {
+        "n_images_ref_hash": "b90a8802f8bf37ef3e4b9902f29b670a283e2bf6fc6a230b358759671fbd0838"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "data_acquisition_s1",
+      "input_ref": {
+        "collection": "COPERNICUS/S1_GRD",
+        "periods": [
+          "2023-06-01/2023-08-31",
+          "2024-06-01/2024-08-31"
+        ]
+      },
+      "params": {
+        "instrument_mode": "IW",
+        "join_max_diff_days": 15
+      },
+      "output": {
+        "n_images_ref_hash": "0884f2dfb202d3098752cd264e23a23af5611fb23e09ab9abb09e9dc4e28d68d"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "pearson_corr_period1",
+      "input_ref": {
+        "period": "2023-06-01/2023-08-31"
+      },
+      "params": {
+        "reducer": "pearsonsCorrelation"
+      },
+      "output": {
+        "mean": -0.015674220023668976,
+        "array_hash": "538de086c04f059419181f88cf7f10014ee97e6d0f3e6418313768611b4a5073"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "pearson_corr_period2",
+      "input_ref": {
+        "period": "2024-06-01/2024-08-31"
+      },
+      "params": {
+        "reducer": "pearsonsCorrelation"
+      },
+      "output": {
+        "mean": -0.010280562683838923,
+        "array_hash": "c433fd645054c83ca5d28a9d9813f20a98ccb73b4ba49b0ee4e2342936ae54a2"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "delta_corr",
+      "input_ref": {
+        "depends_on": [
+          "pearson_corr_period1",
+          "pearson_corr_period2"
+        ]
+      },
+      "params": {},
+      "output": {
+        "mean": 0.005393657339830059,
+        "array_hash": "344f7925563dcfcf27d45e9c6ec7742398af5afcbf243af0509076334dc3ab1a"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "r_t",
+      "input_ref": {
+        "period": "2023-01-01/2024-12-31"
+      },
+      "params": {
+        "reducer": "pearsonsCorrelation"
+      },
+      "output": {
+        "mean": -0.02138018264250545,
+        "array_hash": "001181aaa363c03b6d203f276c40309dc3848e46c533d846bef84a97758d8317"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "moran_index",
+      "input_ref": {
+        "depends_on": [
+          "delta_corr"
+        ]
+      },
+      "params": {
+        "kernel": [
+          [
+            1.0,
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "output": {
+        "mean": -0.03679080924633433,
+        "array_hash": "3ebb6b0230fb2452a7bd8a2d863df2bc6e90e49f1bbcc0e93345f01f8b6aa320"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "risk_index",
+      "input_ref": {
+        "depends_on": [
+          "delta_corr",
+          "moran_index",
+          "r_t"
+        ]
+      },
+      "params": {
+        "alpha": 0.5,
+        "beta": 0.3,
+        "lambda": 0.2
+      },
+      "output": {
+        "mean": 0.7642087609088368,
+        "array_hash": "f61393d17edff90e10c97dd01df489c58210598658bbba88af07f8712aca0ff4"
+      },
+      "timestamp": 1789560766.7984283
+    },
+    {
+      "label": "change_mask",
+      "input_ref": {
+        "depends_on": [
+          "risk_index"
+        ]
+      },
+      "params": {
+        "tau": 0.4
+      },
+      "output": {
+        "changed_pixels": 475,
+        "array_hash": "f376a5edd2f69880df5dee02d8e5a70ab9189338afe921f117797601afd734fd"
+      },
+      "timestamp": 1789560766.7984283
+    }
+  ]
+}

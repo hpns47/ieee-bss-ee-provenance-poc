@@ -1,0 +1,88 @@
+// architecture.dot — Multi-Level Provenance Architecture, updated per
+// BSS2026_Improvement_Brief.md Section 3: adds the "Sensitivity Testing
+// Harness" node in the Verification/Audit layer (feeding all three attack
+// types, not just an ad-hoc single test) and a dashed box around the
+// three Attack Type nodes captioned "tested via sensitivity sweep".
+//
+// No local graphviz (`dot`) binary in this environment to render this to
+// PNG/SVG -- paste into any online renderer (e.g. edotor.net,
+// dreampuf.github.io/GraphvizOnline) or run `dot -Tpng architecture.dot -o architecture.png`
+// once graphviz is installed (`sudo apt install graphviz`).
+
+digraph Architecture {
+  rankdir=TB;
+  fontname="Times New Roman";
+  node [fontname="Times New Roman", shape=box, style="rounded,filled", fillcolor="#f2f2f2"];
+  edge [fontname="Times New Roman", fontsize=10];
+
+  subgraph cluster_data {
+    label="1. Data Acquisition Layer (off-chain)";
+    style=filled; fillcolor="#eaf2fb";
+    S2 [label="Sentinel-2 optical\n(NDVI)"];
+    S1 [label="Sentinel-1 SAR\n(VV/VH)"];
+    JOIN [label="15-day temporal join"];
+    S2 -> JOIN; S1 -> JOIN;
+  }
+
+  subgraph cluster_stat {
+    label="2. Statistical Computation Layer (off-chain, GEE)";
+    style=filled; fillcolor="#eafbea";
+    PEARSON [label="Pearson r\n(corr1, corr2)"];
+    DELTA [label="delta_corr (Δr)"];
+    RT [label="r_t\n(full-period corr.)"];
+    MORAN [label="Moran's I"];
+    RISK [label="risk_index\n(alpha, beta, lambda)"];
+    CHANGE [label="change_mask\n(tau)"];
+    PEARSON -> DELTA -> MORAN -> RISK -> CHANGE;
+    DELTA -> RT [style=dashed];
+    RT -> RISK;
+    JOIN -> PEARSON;
+  }
+
+  LEAF [label="Leaf hash per stage\nH_i = SHA256(input_ref, params_i, output_i, operator_DID, timestamp)",
+        shape=note, fillcolor="#fff7d6"];
+  CHANGE -> LEAF;
+
+  subgraph cluster_merkle {
+    label="3. Merkle Aggregation Layer";
+    style=filled; fillcolor="#fdeeea";
+    MERKLE [label="Binary Merkle tree\n(one root per episode)"];
+  }
+  LEAF -> MERKLE;
+
+  subgraph cluster_chain {
+    label="4. On-chain Layer (Hyperledger Fabric)";
+    style=filled; fillcolor="#f0eafb";
+    ROOT_TX [label="EPISODE_ROOT tx\n(root + metadata only)"];
+    GOV_TX [label="PARAMETER_CHANGE tx\n(governance-signed alpha/beta/lambda/tau)"];
+  }
+  MERKLE -> ROOT_TX;
+
+  subgraph cluster_verify {
+    label="5. Verification / Audit Layer";
+    style=filled; fillcolor="#eafbf6";
+    VERIFIER [label="Verifier"];
+    PROOF [label="Merkle-proof request\nfor stage X"];
+    RECOMPUTE [label="Recompute H_i locally\ncompare vs anchored root"];
+    HARNESS [label="Sensitivity Testing Harness\n(systematic sweep:\nN stages x M magnitudes x K seeds)",
+              shape=box, style="rounded,filled,bold", fillcolor="#ffe8cc", peripheries=2];
+
+    subgraph cluster_attacks {
+      label="tested via sensitivity sweep (Section VII)";
+      style=dashed; color="#b23a3a"; fontcolor="#b23a3a";
+      T1 [label="Attack Type 1\n(data-level)", fillcolor="#fde3e3"];
+      T2 [label="Attack Type 2\n(parameter-level)", fillcolor="#fde3e3"];
+      T3 [label="Attack Type 3\n(output-level)", fillcolor="#fde3e3"];
+    }
+
+    VERIFIER -> PROOF -> RECOMPUTE;
+    HARNESS -> T1; HARNESS -> T2; HARNESS -> T3;
+    T1 -> RECOMPUTE [style=dashed, label="simulated"];
+    T2 -> RECOMPUTE [style=dashed, label="simulated"];
+    T3 -> RECOMPUTE [style=dashed, label="simulated"];
+  }
+
+  ROOT_TX -> PROOF [label="root, Merkle-path"];
+  GOV_TX -> RECOMPUTE [label="cross-check\napproved params", style=dotted];
+  RECOMPUTE -> VERIFIER [label="PASS / FAIL\n+ localized stage"];
+}
