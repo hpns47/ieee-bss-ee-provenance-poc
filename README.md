@@ -1,12 +1,12 @@
-# Provenance PoC: Merkle-anchored multi-level audit layer (BSS2026)
+# Provenance PoC: Merkle-based multi-level provenance architecture (BSS2026)
 
-This is a proof of concept implementation for the project brief, Section 6. It does not deploy a real Hyperledger Fabric network. Instead it is a Python implementation of the same logical structure described in Section 4.1, so the central tamper-detection experiment and the naive-baseline comparison can be run and reported honestly. The Limitations section of the paper should state that a full permissioned-ledger deployment is future work.
+This is a proof of concept for a Merkle-based provenance architecture that is designed for later deployment on a permissioned ledger. It is not a blockchain. The ledger here is a local, hash-chained, ECDSA-signed log that exposes the interface a Hyperledger Fabric chaincode would, so the provenance mechanism itself (per-stage leaf hashing, Merkle aggregation, signed anchoring, governance-gated parameter changes) can be built and validated on its own. Consensus, endorsement, ordering and replication are not implemented or measured. A full permissioned-ledger deployment is future work.
 
 ## Files
 
 `merkle.py` builds a binary Merkle tree and generates and verifies proofs. It also localizes which stage caused a mismatch.
 
-`ledger.py` is an append-only, hash-chained, ECDSA-signed log that simulates a smart contract. It stores only roots and governance transactions.
+`ledger.py` is a local append-only, hash-chained, ECDSA-signed log that stands in for the ledger layer. It stores only roots and governance transactions. It has no consensus, endorsement, ordering or replication, so a holder of the signing key could rewrite it. It also defines the per-episode storage model: a 32 byte root plus a 64 byte signature, 96 bytes in total.
 
 `pipeline.py` is a reproducible synthetic stand-in for the real GEE script. It uses the same ALPHA, BETA, LAMBDA and TAU constants and the same stage sequence: Pearson r, delta_corr, r_t, Moran's I, risk_index, change_mask. It uses the same leaf hash formula, H_i = SHA256(input_ref, params_i, output_i, operator_DID, timestamp).
 
@@ -14,7 +14,7 @@ This is a proof of concept implementation for the project brief, Section 6. It d
 
 `benchmark.py` measures overhead across 5 simulated scales (100m, 50m, 30m, 20m, 10m as a resolution proxy), projects storage cost over different monitoring periods, and measures end to end verification latency (proof generation and proof verification time). It writes `benchmark_results.json`.
 
-`attack_sweep.py` runs an attack sensitivity sweep. It applies Type 1, Type 2 and Type 3 attacks across every applicable stage and a grid of magnitudes, over 40 random seeds per combination. It writes `attack_sweep_results.json`. It also runs a combined attack check (Type 2 and Type 3 in the same episode) and writes `combined_attack_results.json`.
+`attack_sweep.py` runs the Provenance Coverage and Tamper-Injection Validation (the file name is historical). It injects Type 1, Type 2 and Type 3 tampering into every applicable stage across a grid of magnitudes, over 40 seeds per combination, and checks that verification rejects each injection and names the right stage. This is a coverage check of the implementation, not a sensitivity or robustness measurement, because detection follows from comparing SHA-256 digests and does not depend on magnitude. Seeds are derived deterministically, so reruns reproduce the same results. It writes `attack_sweep_results.json`. It also runs a combined check (Type 2 and Type 3 in the same episode) and writes `combined_attack_results.json`.
 
 `fp_sweep.py` runs a false positive rate sweep across 4 legitimate activity scenarios. This is how a real bug was found: an earlier check compared an episode's recorded governance parameter against the ledger's current state instead of its state as of the episode's own timestamp, so it wrongly flagged legitimately anchored older episodes after a later, valid governance change. The fix is `ledger.py`'s `params_as_of` method. It writes `fp_sweep_results.json`.
 
@@ -26,17 +26,15 @@ This is a proof of concept implementation for the project brief, Section 6. It d
 
 `load_real_episode.py` loads `real_episode_data.json`, anchors it, and runs the same attack and naive baseline experiment as `demo_tamper_detection.py`, but on real data.
 
-`architecture.dot` is a Graphviz source file for the updated 5-layer architecture diagram. It adds a Sensitivity Testing Harness node and a dashed box around the three attack types. It is not rendered to an image here because no local `dot` binary is installed.
+`architecture.dot` is a Graphviz source file for the updated 5-layer architecture diagram. It adds a Tamper-Injection Validation Harness node and a dashed box around the three attack types. It is not rendered to an image here because no local `dot` binary is installed.
 
 `HYPERLEDGER_FABRIC_MAPPING.md` is a design level mapping of `ledger.py`'s interface onto a Hyperledger Fabric chaincode: state model, function table, an illustrative Go sketch, and an honest list of what a real Fabric deployment adds that this PoC does not claim.
-
-`FIGURE_CAPTIONS.md` has ready to paste captions for Figures A through F, a replacement paragraph for the tamper detection section, and Limitations wording for the bugs that were found and fixed.
 
 `evaluation_summary.json` and `real_episode_evaluation.json` are machine readable output from the demo run, on synthetic data and on real Sentinel-1/2 data respectively.
 
 ## Figures
 
-Fig. A shows detection rate against attack magnitude for a Type 2 attack on `change_mask`'s tau. The proposed scheme stays at 100% detection at every magnitude tested. The naive baseline stays at 0%, since it never inspects tau at all.
+Fig. A shows detection rate against injected magnitude for a Type 2 attack on `change_mask`'s tau. The proposed scheme stays at 100% detection at every magnitude tested. The naive baseline stays at 0%, since it never inspects tau at all. Detection does not depend on magnitude because it compares SHA-256 digests, so this is a coverage result and not evidence of statistical robustness.
 
 ![Fig. A](fig_A_detection_vs_magnitude.png)
 
@@ -52,7 +50,7 @@ Fig. D plots pipeline compute time against hash, Merkle and sign overhead across
 
 ![Fig. D](fig_D_latency_loglog.png)
 
-Fig. E plots projected on-chain storage over a 1, 2 and 5 year monitoring period at three monitoring cadences.
+Fig. E plots projected anchored ledger storage over a 1, 2 and 5 year monitoring period at three monitoring cadences. Each episode anchors a 32 byte root and a 64 byte signature, 96 bytes in total, so 260 episodes come to 24,960 bytes (24.38 KiB).
 
 ![Fig. E](fig_E_storage_growth.png)
 
@@ -66,7 +64,7 @@ This machine has no Earth Engine authentication and no network access to `earthe
 
 ## Known limitations to state in the paper
 
-There is no real Hyperledger Fabric or Caliper benchmark. This is a local append-only structure with the same interface a smart contract would expose: append, verify_chain, and governance gated parameter changes. See `HYPERLEDGER_FABRIC_MAPPING.md` for the function by function mapping and the specific things a real deployment adds, such as distributed consensus, peer replication, and a separation of duty endorsement policy for governance transactions.
+There is no real Hyperledger Fabric or Caliper benchmark, and nothing here measures blockchain properties such as consensus, endorsement, ordering or replication. This is a local append-only structure with the same interface a smart contract would expose: append, verify_chain, and governance gated parameter changes. See `HYPERLEDGER_FABRIC_MAPPING.md` for the function by function mapping and the specific things a real deployment adds, such as distributed consensus, peer replication, and a separation of duty endorsement policy for governance transactions.
 
 DID is simplified to a bare ECDSA keypair plus a string identifier, not a W3C DID document or resolver. On a real Fabric deployment this maps naturally onto MSP client certificate identity. This is a legitimate simplification to state rather than a gap.
 
@@ -76,7 +74,7 @@ The raster is synthetic rather than live Sentinel-1/2 data by default. The leaf 
 
 ## Bugs found and fixed during evaluation
 
-The sensitivity sweeps in this PoC were written specifically to look for failure modes, not just to confirm expected behavior, and they found two real bugs.
+The validation and false positive checks in this PoC were written specifically to look for failure modes, not just to confirm expected behavior, and they found two real bugs.
 
 The false positive sweep in `fp_sweep.py` found that the parameter cross-check used in `demo_tamper_detection.py` compares an episode against the ledger's current governance state. That means any episode anchored before a later, legitimate parameter change gets wrongly flagged once that change is recorded, even though nothing was tampered with. The fix is `ledger.py`'s `params_as_of(timestamp)` method, which replays governance history only up to the episode's own timestamp. After the fix, the false positive rate is 0% across all four tested scenarios.
 
@@ -89,7 +87,7 @@ No external network access is required for any of these. Only `numpy` and `crypt
 ```bash
 python3 demo_tamper_detection.py   # central tamper-detection experiment
 python3 benchmark.py              # overhead, storage, and verification latency
-python3 attack_sweep.py           # attack sensitivity sweep and combined-attack check
+python3 attack_sweep.py           # tamper-injection validation and combined-attack check
 python3 fp_sweep.py               # false positive rate sweep
 python3 make_figures.py           # renders Fig. A through F from the JSON above
 ```

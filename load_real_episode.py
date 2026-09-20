@@ -45,7 +45,7 @@ def main():
     ledger = ProvenanceLedger()
     ledger.register_operator(operator)
 
-    section("1. BASELINE EPISODE (REAL GEE DATA) — anchor Merkle root on-chain")
+    section("1. BASELINE EPISODE (REAL GEE DATA) — anchor Merkle root in the ledger")
     genuine_records, episode_id, source_params = load_records(args.infile, operator.did)
     print(f"Episode: {episode_id}  |  {len(genuine_records)} stages loaded from {args.infile}")
 

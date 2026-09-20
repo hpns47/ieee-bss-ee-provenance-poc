@@ -18,7 +18,7 @@ import json
 import time
 
 from merkle import MerkleTree, sha256_hex
-from ledger import ProvenanceLedger, OperatorDID, canonical_bytes
+from ledger import ProvenanceLedger, OperatorDID, canonical_bytes, ROOT_BYTES, SIGNATURE_BYTES, ANCHORED_BYTES_PER_EPISODE
 from pipeline import run_episode, DEFAULT_PARAMS
 
 SEPARATOR = "=" * 78
@@ -80,7 +80,7 @@ def main():
     ledger.register_operator(operator)
 
     # ---------------------------------------------------------------
-    section("1. BASELINE EPISODE — run pipeline, anchor Merkle root on-chain")
+    section("1. BASELINE EPISODE — run pipeline, anchor Merkle root in the ledger")
     # ---------------------------------------------------------------
     t0 = time.perf_counter()
     genuine_records = run_episode(seed=42, operator_did=operator.did, params=DEFAULT_PARAMS)
@@ -108,7 +108,8 @@ def main():
           f"({100*anchoring_time/max(pipeline_time,1e-9):.2f}% of pipeline time)")
     print(f"Storage cost: {len(genuine_records)} leaf hashes/episode off-chain "
           f"(32 bytes each = {len(genuine_records)*32} bytes) vs. "
-          f"1 root (32 bytes) + signature stored on-chain per episode.")
+          f"{ROOT_BYTES} B root + {SIGNATURE_BYTES} B signature = {ANCHORED_BYTES_PER_EPISODE} B "
+          f"anchored in the ledger per episode.")
 
     # ---------------------------------------------------------------
     section("2. LEGITIMATE GOVERNANCE TRANSACTION — authorized tau change (0.4 -> 0.5)")
@@ -136,7 +137,7 @@ def main():
     anchored_root = ledger.entries[0].payload["root"]  # the genuine EPISODE_ROOT entry
 
     match = reported_tree.root == anchored_root
-    print(f"Anchored root (on-chain):   {anchored_root}")
+    print(f"Anchored root (ledger):     {anchored_root}")
     print(f"Recomputed root (reported): {reported_tree.root}")
     print(f"Root match? {match}  -->  {'PASS' if match else 'FAIL -- TAMPER DETECTED'}")
 
@@ -164,7 +165,7 @@ def main():
     reported_leaves_2 = recompute_leaves(tampered_output_records)
     reported_tree_2 = build_episode_tree(tampered_output_records)
     match2 = reported_tree_2.root == anchored_root
-    print(f"Anchored root (on-chain):   {anchored_root}")
+    print(f"Anchored root (ledger):     {anchored_root}")
     print(f"Recomputed root (reported): {reported_tree_2.root}")
     print(f"Root match? {match2}  -->  {'PASS' if match2 else 'FAIL -- TAMPER DETECTED'}")
     if not match2:
@@ -219,7 +220,9 @@ def main():
         "anchoring_overhead_pct": round(100 * anchoring_time / max(pipeline_time, 1e-9), 4),
         "leaves_per_episode": len(genuine_records),
         "off_chain_leaf_storage_bytes": len(genuine_records) * 32,
-        "on_chain_storage_bytes_per_episode": 32,
+        "anchored_root_bytes_per_episode": ROOT_BYTES,
+        "anchored_signature_bytes_per_episode": SIGNATURE_BYTES,
+        "anchored_bytes_per_episode": ANCHORED_BYTES_PER_EPISODE,
         "attack_type2_param_level_detected": not match,
         "attack_type2_localized_stage": bad_stage if not match else None,
         "attack_type3_output_level_detected": not match2,

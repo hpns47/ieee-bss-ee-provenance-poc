@@ -3,7 +3,7 @@ benchmark.py — Evaluation Plan items 1-2 (brief Section 5), plus
 BSS2026_Final_Hardening_Brief.md Section 1.2 (end-to-end verification
 latency):
 
-  1. Overhead of blockchain anchoring relative to pipeline compute time,
+  1. Overhead of ledger anchoring relative to pipeline compute time,
      at several scales (grid resolution stands in for the GEE `scale`
      parameter: 10m/30m/100m -> finer scale = more pixels = larger grid).
   2. Storage cost projection: how many hashes/blocks accumulate for one
@@ -26,7 +26,7 @@ import json
 import statistics
 import time
 
-from ledger import ProvenanceLedger, OperatorDID
+from ledger import ProvenanceLedger, OperatorDID, ROOT_BYTES, SIGNATURE_BYTES, ANCHORED_BYTES_PER_EPISODE
 from merkle import MerkleTree
 import pipeline as pl
 
@@ -109,8 +109,13 @@ def main():
     print("2. STORAGE COST PROJECTION over a monitoring period")
     print("=" * 78)
     leaves_per_episode = results["100m"]["n_leaves"]
-    on_chain_bytes_per_episode = 32 + 64  # Merkle root + ECDSA signature (approx, SECP256R1 DER ~70-72B)
-    off_chain_bytes_per_episode = leaves_per_episode * 32
+    # b_episode = b_root + b_sig = ROOT_BYTES + SIGNATURE_BYTES = 32 + 64 = 96 B (see ledger.py
+    # for what this excludes). "on_chain_bytes" in the JSON is kept as a key name for
+    # compatibility with make_figures.py; it means bytes anchored in the ledger layer.
+    anchored_bytes_per_episode = ANCHORED_BYTES_PER_EPISODE
+    off_chain_bytes_per_episode = leaves_per_episode * ROOT_BYTES  # 32 B SHA-256 digest per leaf
+    print(f"Anchored bytes per episode = {ROOT_BYTES} B root + {SIGNATURE_BYTES} B signature "
+          f"= {anchored_bytes_per_episode} B (KB below means KiB = 1024 B)")
 
     storage_projection = []
     for label, episodes_per_year in [("monthly monitoring", 12),
@@ -118,20 +123,20 @@ def main():
                                       ("weekly monitoring", 52)]:
         for years in (1, 2, 5):
             n_episodes = episodes_per_year * years
-            on_chain_total = n_episodes * on_chain_bytes_per_episode
+            anchored_total = n_episodes * anchored_bytes_per_episode
             off_chain_total = n_episodes * off_chain_bytes_per_episode
             storage_projection.append(dict(cadence=label, years=years, n_episodes=n_episodes,
-                                            on_chain_bytes=on_chain_total, off_chain_bytes=off_chain_total))
+                                            on_chain_bytes=anchored_total, off_chain_bytes=off_chain_total))
             print(f"{label:>22}, {years}y: {n_episodes:>4} episodes -> "
-                  f"on-chain {on_chain_total/1024:>7.2f} KB | "
+                  f"anchored ledger {anchored_total/1024:>7.2f} KB | "
                   f"off-chain leaf store {off_chain_total/1024:>7.2f} KB")
 
     print(f"\nPer-episode fixed leaf count: {leaves_per_episode} stages "
-          f"(independent of AOI size or scale -- the pipeline structure is fixed, "
+          f"(independent of AOI size or scale, the pipeline structure is fixed, "
           f"only per-pixel array sizes inside each stage's array_hash change). "
-          "This is the key scalability argument: on-chain storage growth is "
+          "This is the key scalability argument: anchored storage growth is "
           "O(episodes), not O(pixels) or O(AOI area), because raw rasters never "
-          "go on-chain -- only one root + one signature per episode.")
+          "enter the ledger, only one root and one signature per episode.")
 
     with open("benchmark_results.json", "w") as f:
         json.dump({"overhead_by_scale": results, "storage_projection": storage_projection}, f, indent=2)

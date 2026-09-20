@@ -1,11 +1,23 @@
 """
-attack_sweep.py — Attack Sensitivity Sweep (BSS2026_Improvement_Brief.md,
-Section 1). Replaces the single-episode / single-magnitude / single-stage
-tamper demo (demo_tamper_detection.py) with a statistically meaningful
-sweep: every attack type x every applicable target stage x a grid of
-magnitudes x N_TRIALS random seeds, recording detection/localization
-rates for both the proposed (Merkle multi-level) scheme and the naive
-(sign-only-the-final-output) baseline.
+attack_sweep.py — Provenance Coverage and Tamper-Injection Validation
+(BSS2026_Improvement_Brief.md, Section 1; the file name is historical).
+
+What this is: a coverage check of the implementation. Controlled tampering
+is injected into reference episodes (every attack type x every applicable
+target stage x a grid of perturbation magnitudes x N_TRIALS seeds), and we
+check that verification rejects it and names the affected stage, for both
+the proposed (Merkle multi-level) scheme and the naive
+(sign-only-the-final-output) baseline. It replaces the single-episode demo
+in demo_tamper_detection.py as the systematic version of the same test.
+
+What this is not: a sensitivity or robustness measurement. Verification
+compares SHA-256 digests, so any nonzero change to an anchored field
+changes the digest with overwhelming probability. Detection is therefore
+magnitude-invariant by construction, and flat detection curves are the
+expected outcome, not statistical evidence of robustness. The value of the
+experiment is that it exercises every stage and attack class of the
+implementation and can expose coverage bugs (see the combined-attack check
+below and fp_sweep.py, which each found one).
 
 Attack types (per brief Section 1.2):
   type1_data      -- data_acquisition_s2 / data_acquisition_s1: simulate
@@ -49,6 +61,7 @@ from __future__ import annotations
 import copy
 import json
 import time
+import zlib
 
 import numpy as np
 
@@ -81,6 +94,13 @@ NUMERIC_FIELD = {
 TAU_DELTAS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.3]          # absolute, both signs
 RISK_PARAM_MAGNITUDES = [0.05, 0.10, 0.20, 0.30, 0.50]  # relative to alpha/beta/lambda
 OUTPUT_MAGNITUDES = [0.01, 0.05, 0.10, 0.25, 0.50]      # relative, type3
+
+
+def stable_seed(*parts) -> int:
+    """Deterministic across runs and machines. The built-in hash() of strings is
+    salted per process (PYTHONHASHSEED), which would make every run use different
+    episodes and break reproducibility of the sweep."""
+    return zlib.crc32(repr(parts).encode("utf-8")) % (2**31)
 
 
 def _perturb(old_value: float, rel_magnitude: float, sign: float) -> float:
@@ -188,7 +208,7 @@ def apply_combined(records: list, rng) -> list:
 def run_combined_attack_check(n_trials: int, operator: OperatorDID) -> dict:
     detected = both_localized_new = only_one_localized_old = 0
     for i in range(n_trials):
-        seed = hash(("combined", i)) % (2**31)
+        seed = stable_seed("combined", i)
         rng = np.random.default_rng(seed)
         genuine = run_episode(seed=seed, operator_did=operator.did, params=DEFAULT_PARAMS)
         genuine_tree = build_episode_tree(genuine)
@@ -241,7 +261,7 @@ def main():
     for attack_type, target_stage, magnitude in combos:
         proposed_det = proposed_loc = naive_det = 0
         for i in range(N_TRIALS):
-            seed = hash((attack_type, target_stage, magnitude, i)) % (2**31)
+            seed = stable_seed(attack_type, target_stage, magnitude, i)
             pd, pl, nd = run_trial(attack_type, target_stage, magnitude, seed, operator)
             proposed_det += int(pd)
             proposed_loc += int(pl)

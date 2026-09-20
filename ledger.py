@@ -1,6 +1,11 @@
 """
-ledger.py — Simulates the On-chain Layer (Section 4.1, item 4) as a local
-append-only log. Per the brief's fallback plan (Section 6), this stands in
+ledger.py — Simulates the ledger layer (Section 4.1, item 4) as a local
+append-only log. This is NOT a blockchain: there is no consensus, no
+endorsement, no ordering service and no replication, so a holder of the
+signing key could rewrite the whole log. It exposes the interface a
+permissioned-ledger chaincode would (see HYPERLEDGER_FABRIC_MAPPING.md),
+so the provenance mechanism can be validated locally before deployment.
+Per the brief's fallback plan (Section 6), it stands in
 for a Hyperledger Fabric smart contract: it only ever stores Merkle roots
 + metadata, never raw data, and every entry is signed by an "operator DID"
 which here is simplified to an ECDSA (SECP256R1) keypair, as explicitly
@@ -26,6 +31,16 @@ from typing import Optional
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
+
+
+# Storage model for one anchored episode: a SHA-256 Merkle root plus one
+# ECDSA P-256 signature in fixed-size raw r||s form. The PoC serializes the
+# signature as DER (70-72 B) and each entry also carries a 32 B hash-chain
+# link and metadata. Those are not counted, so ANCHORED_BYTES_PER_EPISODE is
+# a lower bound on real per-episode ledger cost.
+ROOT_BYTES = 32
+SIGNATURE_BYTES = 64
+ANCHORED_BYTES_PER_EPISODE = ROOT_BYTES + SIGNATURE_BYTES
 
 
 def canonical_bytes(obj) -> bytes:
@@ -78,7 +93,7 @@ class LedgerEntry:
 
 
 class ProvenanceLedger:
-    """Append-only, hash-chained, signed log simulating the on-chain layer."""
+    """Append-only, hash-chained, signed local log standing in for the ledger layer."""
 
     GENESIS_HASH = "0" * 64
 

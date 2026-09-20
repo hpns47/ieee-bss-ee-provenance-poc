@@ -3,6 +3,15 @@ merkle.py — Binary Merkle tree over SHA-256, used to aggregate per-stage
 leaf hashes of one monitoring episode into a single root (Section 4.1,
 "Merkle Aggregation Layer").
 
+Structure (this is a balanced binary tree, not a sequential hash chain).
+Let level 0 hold the n leaf hashes and let m_l be the number of nodes at
+level l. Then m_(l+1) = ceil(m_l / 2), and node j of level l+1 is
+SHA256(left || right) of nodes 2j-1 and 2j of level l, where the raw digest
+bytes are concatenated. If m_l is odd, the last node is paired with itself.
+The root is the single node at depth ceil(log2 n). For the 9 pipeline stages
+of one episode the level sizes are 9, 5, 3, 2, 1, so the depth is 4 and a
+proof path holds 4 sibling hashes.
+
 Convention: if a level has an odd number of nodes, the last node is
 duplicated (standard Bitcoin-style convention). This is noted explicitly
 because it is a common source of second-preimage subtleties that a

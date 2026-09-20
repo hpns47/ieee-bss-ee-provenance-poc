@@ -1,8 +1,8 @@
 // architecture.dot — Multi-Level Provenance Architecture, updated per
-// BSS2026_Improvement_Brief.md Section 3: adds the "Sensitivity Testing
-// Harness" node in the Verification/Audit layer (feeding all three attack
+// BSS2026_Improvement_Brief.md Section 3: adds the "Tamper-Injection
+// Validation Harness" node in the Verification/Audit layer (feeding all three attack
 // types, not just an ad-hoc single test) and a dashed box around the
-// three Attack Type nodes captioned "tested via sensitivity sweep".
+// three Attack Type nodes captioned "covered by tamper-injection validation".
 //
 // No local graphviz (`dot`) binary in this environment to render this to
 // PNG/SVG -- paste into any online renderer (e.g. edotor.net,
@@ -51,7 +51,7 @@ digraph Architecture {
   LEAF -> MERKLE;
 
   subgraph cluster_chain {
-    label="4. On-chain Layer (Hyperledger Fabric)";
+    label="4. Ledger Layer (local simulation; interface designed for a permissioned ledger such as Hyperledger Fabric)";
     style=filled; fillcolor="#f0eafb";
     ROOT_TX [label="EPISODE_ROOT tx\n(root + metadata only)"];
     GOV_TX [label="PARAMETER_CHANGE tx\n(governance-signed alpha/beta/lambda/tau)"];
@@ -64,11 +64,11 @@ digraph Architecture {
     VERIFIER [label="Verifier"];
     PROOF [label="Merkle-proof request\nfor stage X"];
     RECOMPUTE [label="Recompute H_i locally\ncompare vs anchored root"];
-    HARNESS [label="Sensitivity Testing Harness\n(systematic sweep:\nN stages x M magnitudes x K seeds)",
+    HARNESS [label="Tamper-Injection Validation Harness\n(coverage check:\nN stages x M magnitudes x K seeds)",
               shape=box, style="rounded,filled,bold", fillcolor="#ffe8cc", peripheries=2];
 
     subgraph cluster_attacks {
-      label="tested via sensitivity sweep (Section VII)";
+      label="covered by tamper-injection validation (Section VII)";
       style=dashed; color="#b23a3a"; fontcolor="#b23a3a";
       T1 [label="Attack Type 1\n(data-level)", fillcolor="#fde3e3"];
       T2 [label="Attack Type 2\n(parameter-level)", fillcolor="#fde3e3"];

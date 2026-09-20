@@ -1,5 +1,8 @@
 .venv
+__pycache__/
+*.pyc
 BSS2026_Final_Hardening_Brief.md
 BSS2026_Improvement_Brief.md
 BSS2026_Project_Brief.md
 BSS2026_Related_Work_Bibliography.md
+описание фидбека.txt
